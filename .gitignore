@@ -1,0 +1,12 @@
+node_modules/
+dist/
+reports/
+.env
+.env.*
+!.env.example
+playwright-report/
+test-results/
+.playwright/
+.features-gen/
+allure-results/
+.DS_Store

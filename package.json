@@ -1,0 +1,32 @@
+{
+  "name": "playwright_framework",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "bdd:gen": "bddgen",
+    "test": "npm run bdd:gen && playwright test",
+    "test:local": "ENV=local npm run test",
+    "test:staging": "ENV=staging npm run test",
+    "test:prod": "ENV=production npm run test",
+    "test:custom": "npm run bdd:gen && playwright test",
+    "test:headed": "npm run bdd:gen && playwright test --headed",
+    "test:debug": "npm run bdd:gen && playwright test --debug",
+    "test:ui": "npm run bdd:gen && playwright test --ui",
+    "report:html": "playwright show-report reports/html",
+    "report:allure": "allure serve reports/allure-results",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@cucumber/cucumber": "^13.0.0",
+    "@playwright/test": "^1.60.0",
+    "@types/node": "^25.9.2",
+    "allure-playwright": "^3.9.0",
+    "playwright-bdd": "^9.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  }
+}
