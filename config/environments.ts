@@ -2,33 +2,42 @@ export type Environment = 'local' | 'staging' | 'production' | 'custom';
 
 export interface EnvironmentConfig {
   baseUrl: string;
-  apiBaseUrl?: string;
+  apiBaseUrl: string;
   timeout: number;
   retries: number;
 }
 
+const DEMO_URL = 'https://automationexercise.com';
+
+/** BASE_URL / API_BASE_URL env vars always win over the defaults below. */
+function urls(defaultBaseUrl: string): Pick<EnvironmentConfig, 'baseUrl' | 'apiBaseUrl'> {
+  const baseUrl = process.env['BASE_URL'] || defaultBaseUrl;
+  return {
+    baseUrl,
+    apiBaseUrl: process.env['API_BASE_URL'] || `${baseUrl}/api`,
+  };
+}
+
 const configs: Record<Environment, EnvironmentConfig> = {
   local: {
-    baseUrl: process.env['BASE_URL'] || 'https://practicetestautomation.com',
-    apiBaseUrl: process.env['API_BASE_URL'],
+    ...urls(DEMO_URL),
     timeout: 30_000,
-    retries: 0,
+    // The public demo site occasionally answers 5xx under load.
+    // A retried-then-passed test is still reported as "flaky", never hidden.
+    retries: 1,
   },
   staging: {
-    baseUrl: process.env['BASE_URL'] || 'https://staging.example.com',
-    apiBaseUrl: process.env['API_BASE_URL'],
+    ...urls('https://staging.example.com'),
     timeout: 45_000,
     retries: 1,
   },
   production: {
-    baseUrl: process.env['BASE_URL'] || 'https://example.com',
-    apiBaseUrl: process.env['API_BASE_URL'],
+    ...urls(DEMO_URL),
     timeout: 60_000,
     retries: 2,
   },
   custom: {
-    baseUrl: process.env['BASE_URL'] || '',
-    apiBaseUrl: process.env['API_BASE_URL'],
+    ...urls(''),
     timeout: Number(process.env['TIMEOUT']) || 30_000,
     retries: Number(process.env['RETRIES']) || 0,
   },

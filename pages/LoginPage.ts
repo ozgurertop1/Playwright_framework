@@ -1,67 +1,48 @@
-import { Page, Locator } from '@playwright/test';
+import { Locator } from '@playwright/test';
 import { BasePage } from './BasePage';
 
 export class LoginPage extends BasePage {
-  readonly path = '/practice-test-login/';
+  readonly path = '/login';
 
-  constructor(page: Page) {
-    super(page);
+  get loginForm(): Locator {
+    return this.page.locator('.login-form');
   }
 
-  get usernameInput(): Locator {
-    return this.page.locator('#username');
+  get emailInput(): Locator {
+    return this.page.locator('[data-qa="login-email"]');
   }
 
   get passwordInput(): Locator {
-    return this.page.locator('#password');
+    return this.page.locator('[data-qa="login-password"]');
   }
 
   get submitButton(): Locator {
-    return this.page.locator('#submit');
+    return this.page.locator('[data-qa="login-button"]');
   }
 
   get errorMessage(): Locator {
-    return this.page.locator('#error');
+    return this.loginForm.locator('form p');
   }
 
-  get successMessage(): Locator {
-    return this.page.locator('.post-title');
-  }
-
-  async navigate(): Promise<void> {
-    await this.goto(this.path);
-  }
-
-  async fillUsername(username: string): Promise<void> {
-    await this.fill(this.usernameInput, username);
-  }
-
-  async fillPassword(password: string): Promise<void> {
+  async loginWith(email: string, password: string): Promise<void> {
+    await this.fill(this.emailInput, email);
     await this.fill(this.passwordInput, password);
-  }
-
-  async clickSubmit(): Promise<void> {
     await this.click(this.submitButton);
   }
 
-  async loginWith(username: string, password: string): Promise<void> {
-    await this.fillUsername(username);
-    await this.fillPassword(password);
-    await this.clickSubmit();
+  async assertOnLoginPage(): Promise<void> {
+    await this.assertUrl(/\/login/);
+    await this.assertVisible(this.loginForm);
   }
 
-  async assertLoginSuccessful(): Promise<void> {
-    await this.assertVisible(this.successMessage);
-    await this.assertContainsText(this.successMessage, 'Logged In Successfully');
+  async assertLoggedInAs(name: string): Promise<void> {
+    await this.assertVisible(this.header.loggedInAs);
+    await this.assertContainsText(this.header.loggedInAs, name);
   }
 
   async assertLoginFailed(expectedError: string): Promise<void> {
     await this.assertVisible(this.errorMessage);
-    await this.assertContainsText(this.errorMessage, expectedError);
-  }
-
-  async assertOnLoginPage(): Promise<void> {
-    await this.assertUrl(/practice-test-login/);
-    await this.assertVisible(this.usernameInput);
+    await this.assertText(this.errorMessage, expectedError);
+    await this.assertHidden(this.header.loggedInAs, 'User must not be logged in');
   }
 }

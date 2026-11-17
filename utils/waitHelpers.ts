@@ -1,4 +1,4 @@
-import { Page, Locator, Response } from '@playwright/test';
+import { Page, Locator, Response, expect } from '@playwright/test';
 
 export async function waitForApiResponse(
   page: Page,
@@ -26,8 +26,6 @@ export async function waitForTextToAppear(
   text: string,
   timeout = 15_000
 ): Promise<void> {
-  await locator.waitFor({ state: 'visible', timeout });
-  const { expect } = await import('@playwright/test');
   await expect(locator).toContainText(text, { timeout });
 }
 

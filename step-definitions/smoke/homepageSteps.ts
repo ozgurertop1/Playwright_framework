@@ -1,14 +1,14 @@
-import { Given, Then } from '../bdd';
 import { expect } from '@playwright/test';
+import { Given, Then } from '../bdd';
 
-Given('kullanıcı ana sayfayı açar', async ({ page }) => {
-  await page.goto('/');
+Given('the user opens the homepage', async ({ pageManager }) => {
+  await pageManager.homePage.navigate();
 });
 
-Then('sayfa başlığı görünür', async ({ page }) => {
-  await expect(page).toHaveTitle(/.+/);
+Then('the page title is {string}', async ({ page }, title: string) => {
+  await expect(page).toHaveTitle(title);
 });
 
-Then('sayfa URL\'i doğrudur', async ({ page }) => {
-  await expect(page).toHaveURL(/.+/);
+Then('the main navigation, slider and featured products are visible', async ({ pageManager }) => {
+  await pageManager.homePage.assertLoaded();
 });

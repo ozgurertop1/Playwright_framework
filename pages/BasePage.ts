@@ -1,22 +1,33 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { TRANSIENT_STATUSES, withRetry } from '../utils/retry';
+import { Header } from './components/Header';
 
 export abstract class BasePage {
   protected readonly page: Page;
+  readonly header: Header;
+
+  /** Path relative to baseURL, e.g. '/login'. */
+  abstract readonly path: string;
 
   constructor(page: Page) {
     this.page = page;
+    this.header = new Header(page);
   }
 
+  async navigate(): Promise<void> {
+    await this.goto(this.path);
+  }
+
+  /** Navigates and transparently retries when the server is temporarily unavailable. */
   async goto(path: string = ''): Promise<void> {
-    await this.page.goto(path);
+    await withRetry(
+      () => this.page.goto(path),
+      (response) => !!response && TRANSIENT_STATUSES.has(response.status())
+    );
   }
 
   async waitForPageLoad(): Promise<void> {
     await this.page.waitForLoadState('load');
-  }
-
-  async waitForNetworkIdle(): Promise<void> {
-    await this.page.waitForLoadState('networkidle');
   }
 
   async click(locator: Locator): Promise<void> {
@@ -24,7 +35,6 @@ export abstract class BasePage {
   }
 
   async fill(locator: Locator, value: string): Promise<void> {
-    await locator.clear();
     await locator.fill(value);
   }
 
@@ -52,7 +62,7 @@ export abstract class BasePage {
     await expect(locator, message).toBeHidden();
   }
 
-  async assertText(locator: Locator, text: string): Promise<void> {
+  async assertText(locator: Locator, text: string | RegExp): Promise<void> {
     await expect(locator).toHaveText(text);
   }
 
@@ -69,19 +79,11 @@ export abstract class BasePage {
   }
 
   async getElementText(locator: Locator): Promise<string> {
-    return (await locator.textContent()) ?? '';
+    return ((await locator.textContent()) ?? '').trim();
   }
 
   async getInputValue(locator: Locator): Promise<string> {
     return locator.inputValue();
-  }
-
-  async isVisible(locator: Locator): Promise<boolean> {
-    return locator.isVisible();
-  }
-
-  async isEnabled(locator: Locator): Promise<boolean> {
-    return locator.isEnabled();
   }
 
   async getCurrentUrl(): Promise<string> {
@@ -90,12 +92,5 @@ export abstract class BasePage {
 
   async getPageTitle(): Promise<string> {
     return this.page.title();
-  }
-
-  async takeScreenshot(name: string): Promise<void> {
-    await this.page.screenshot({
-      path: `reports/screenshots/${name}-${Date.now()}.png`,
-      fullPage: true,
-    });
   }
 }
