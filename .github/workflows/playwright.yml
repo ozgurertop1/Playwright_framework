@@ -1,13 +1,14 @@
-name: Playwright Tests
+name: CI
+
+# The public demo site blocks automated traffic coming from cloud CI runners,
+# so this pipeline validates the framework itself (types, step bindings, test
+# discovery). The full API + E2E suite runs locally — see README.
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-  schedule:
-    # Daily run at 06:00 UTC — catches regressions on the target site itself.
-    - cron: '0 6 * * *'
   workflow_dispatch:
 
 concurrency:
@@ -15,10 +16,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: API + E2E (Chromium)
+  validate:
+    name: Type check + scenario validation
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v5
@@ -31,52 +32,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
       - name: Type check
         run: npm run typecheck
 
-      - name: Run tests
-        run: npm test
+      - name: Generate specs from Gherkin (fails on any unbound step)
+        run: npx bddgen
 
-      - name: Set up Java (for Allure CLI)
-        if: ${{ !cancelled() }}
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - name: Generate Allure report
-        if: ${{ !cancelled() }}
-        run: npx allure generate reports/allure-results -o reports/allure-report --clean
-
-      - name: Upload Playwright HTML report
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: reports/html
-          retention-days: 14
-
-      - name: Upload Allure report for GitHub Pages
-        if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: reports/allure-report
-
-  publish-report:
-    name: Publish Allure report
-    needs: test
-    if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-24.04
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Discover all tests
+        run: npx playwright test --list --project=api --project=chromium --project=firefox

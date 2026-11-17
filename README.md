@@ -1,7 +1,6 @@
 # Playwright BDD Test Automation Framework
 
-[![Playwright Tests](https://github.com/ozgurertop1/Playwright_framework/actions/workflows/playwright.yml/badge.svg)](https://github.com/ozgurertop1/Playwright_framework/actions/workflows/playwright.yml)
-[![Allure Report](https://img.shields.io/badge/Allure-live%20report-orange)](https://ozgurertop1.github.io/Playwright_framework/)
+[![CI](https://github.com/ozgurertop1/Playwright_framework/actions/workflows/playwright.yml/badge.svg)](https://github.com/ozgurertop1/Playwright_framework/actions/workflows/playwright.yml)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6)
 ![Playwright](https://img.shields.io/badge/Playwright-1.60-2EAD33)
 
@@ -9,8 +8,6 @@ A production-style end-to-end test framework built with **Playwright**, **TypeSc
 It tests a real e-commerce demo site ([automationexercise.com](https://automationexercise.com)) through both its **UI** and its **REST API**.
 
 The key idea: **UI tests never waste time on setup through the UI.** Test accounts are created and deleted through the API, so each UI scenario only exercises the behaviour it is actually testing. The result is faster, more stable and fully isolated tests.
-
-📊 **[Latest Allure report →](https://ozgurertop1.github.io/Playwright_framework/)** (published by CI on every push to `main`)
 
 ---
 
@@ -25,7 +22,7 @@ The key idea: **UI tests never waste time on setup through the UI.** Test accoun
 | **Page Object Model** | `BasePage` + reusable `Header` component + a lazy `PageManager`, all injected through fixtures. |
 | **Resilient by design** | Transient 429/5xx responses are retried with back-off (API calls and navigation only, never real assertion failures). Ads/trackers are blocked. Failures caused by the target server are automatically tagged as `infrastructure` in the report. |
 | **Multi-environment** | `local`, `staging`, `production`, `custom` presets, all overridable with env vars. |
-| **CI/CD** | GitHub Actions on every push/PR plus a daily scheduled run. The Allure report is published to GitHub Pages. |
+| **CI** | GitHub Actions on every push/PR: strict type check, Gherkin compilation that fails on any unbound step, and discovery of every test across all projects. |
 
 ## Tech stack
 
@@ -135,6 +132,8 @@ Copy `.env.example` → `.env`, or pass variables inline:
 ## A note on the target site
 
 automationexercise.com is a free public practice site and occasionally returns `503 queue full` or Cloudflare `52x` errors under load. The framework retries those transient responses, keeps parallelism modest, and tags any remaining server-side failure as `infrastructure`, so real defects remain easy to spot.
+
+The site also blocks automated traffic coming from cloud CI runners. That is why the CI pipeline validates the framework (types, step bindings, test discovery) while the full API + E2E suite runs locally. **Roadmap:** run the suite in CI against an application started in Docker inside the pipeline, so every run gets a fresh, isolated test environment.
 
 ---
 
